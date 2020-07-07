@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'movie.dart';
+import 'wideico_icons.dart';
 
 void main() {
   debugDefaultTargetPlatformOverride = TargetPlatform.fuchsia;
@@ -75,17 +76,23 @@ class DraggableAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
           ),
           IconButton(
-            icon: Icon(Icons.minimize),
+            iconSize: 14,
+            icon: Icon(Wideico.asset_2),
             onPressed: () async =>
                 await platform_channel_draggable.invokeMethod("onClose"),
           ),
           IconButton(
-            icon: Icon(Icons.maximize),
+            iconSize: 13,
+            icon: Icon(
+              Wideico.asset_1,
+              size: 13,
+            ),
             onPressed: () async =>
                 await platform_channel_draggable.invokeMethod("onClose"),
           ),
           IconButton(
-            icon: Icon(Icons.close),
+            iconSize: 13,
+            icon: Icon(Wideico.asset_1),
             onPressed: () async =>
                 await platform_channel_draggable.invokeMethod("onClose"),
           ),
