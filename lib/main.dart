@@ -3,40 +3,69 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'movie.dart';
 import 'wideico_icons.dart';
+import 'AppStateNotifier.dart';
+// void main() {
+//   debugDefaultTargetPlatformOverride = TargetPlatform.fuchsia;
+//   runApp(MyApp());
+// }
 
 void main() {
   debugDefaultTargetPlatformOverride = TargetPlatform.fuchsia;
-  runApp(MyApp());
+  runApp(
+    ChangeNotifierProvider<AppStateNotifier>(
+      create: (context) => AppStateNotifier(),
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'R/WIDESCREENWALLPAPER',
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        primarySwatch: Colors.blue,
-        fontFamily: 'BlenderPro',
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: Scaffold(
-        appBar: DraggableAppBar(title: "r/WidescreenWallpaper"),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Text(
-                Movie.s.toString(),
-                style: TextStyle(fontSize: 18),
-              ),
-            ],
+    return Consumer<AppStateNotifier>(
+      builder: (context, appState, child) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'R/WIDESCREENWALLPAPER',
+          theme: ThemeData(
+            brightness: Brightness.light,
+            primarySwatch: Colors.blue,
+            fontFamily: 'BlenderPro',
+            visualDensity: VisualDensity.adaptivePlatformDensity,
           ),
-        ),
-      ),
+          darkTheme: ThemeData(
+            brightness: Brightness.dark,
+            primarySwatch: Colors.red,
+            scaffoldBackgroundColor: Color(0xFF191919),
+            fontFamily: 'BlenderPro',
+            visualDensity: VisualDensity.adaptivePlatformDensity,
+          ),
+          themeMode: appState.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          home: Scaffold(
+            appBar: DraggableAppBar(title: "r/WidescreenWallpaper"),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Text(
+                    Movie.s.toString(),
+                    style: TextStyle(fontSize: 18),
+                  ),
+                  Switch(
+                    value: Provider.of<AppStateNotifier>(context).isDarkMode,
+                    onChanged: (value) =>
+                        Provider.of<AppStateNotifier>(context, listen: false)
+                            .updateTheme(value),
+                  )
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -76,15 +105,15 @@ class DraggableAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
           ),
           IconButton(
-            iconSize: 14,
-            icon: Icon(Wideico.asset_2),
+            iconSize: 17,
+            icon: Icon(Icons.minimize),
             onPressed: () async =>
                 await platform_channel_draggable.invokeMethod("onClose"),
           ),
           IconButton(
-            iconSize: 13,
+            iconSize: 15,
             icon: Icon(
-              Wideico.asset_1,
+              Wideico.asset_2,
               size: 13,
             ),
             onPressed: () async =>
