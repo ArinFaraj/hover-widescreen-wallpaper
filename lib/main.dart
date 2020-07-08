@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'movie.dart';
 import 'wideico_icons.dart';
 import 'AppStateNotifier.dart';
+import 'dart:io';
 // void main() {
 //   debugDefaultTargetPlatformOverride = TargetPlatform.fuchsia;
 //   runApp(MyApp());
@@ -51,7 +51,7 @@ class MyApp extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   Text(
-                    Movie.s.toString(),
+                    Platform.operatingSystem,
                     style: TextStyle(fontSize: 18),
                   ),
                   Switch(
@@ -59,7 +59,7 @@ class MyApp extends StatelessWidget {
                     onChanged: (value) =>
                         Provider.of<AppStateNotifier>(context, listen: false)
                             .updateTheme(value),
-                  )
+                  ),
                 ],
               ),
             ),
@@ -79,48 +79,57 @@ class DraggableAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   DraggableAppBar({@required String title}) {
     this.appBar = Container(
+      color: Colors.transparent,
       child: Row(
         children: [
-          SizedBox(width: 20),
-          Expanded(
-            child: RichText(
-              text: TextSpan(
-                text: 'R/',
-                style: TextStyle(
-                    color: Color(0xFF00C2FF),
-                    fontSize: 23,
-                    fontWeight: FontWeight.w700,
-                    fontFamily: 'BlenderPro'),
-                children: <TextSpan>[
-                  TextSpan(
-                    text: 'WIDESCREENWALLPAPER',
-                    style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 23,
-                        fontWeight: FontWeight.w700,
-                        fontFamily: 'BlenderPro'),
-                  ),
-                ],
-              ),
+          SizedBox(height: 45, width: 20),
+          RichText(
+            text: TextSpan(
+              text: 'R',
+              style: TextStyle(
+                  color: Color(0xFF00C2FF),
+                  fontSize: 23,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'BlenderPro'),
+              children: <TextSpan>[
+                TextSpan(
+                  text: '/WIDESCREENWALLPAPER',
+                  style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 23,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'BlenderPro'),
+                ),
+              ],
             ),
           ),
+          SizedBox(width: 20),
+          DropdownButton<String>(
+            items: <String>['One', 'Two', 'Free', 'Four']
+                .map<DropdownMenuItem<String>>((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(value),
+              );
+            }).toList(),
+            value: 'One',
+            onChanged: (String value) {},
+          ),
+          Expanded(child: SizedBox(height: 45)),
           IconButton(
-            iconSize: 17,
+            iconSize: 16,
             icon: Icon(Icons.minimize),
             onPressed: () async =>
-                await platform_channel_draggable.invokeMethod("onClose"),
+                await platform_channel_draggable.invokeMethod("onMinimize"),
           ),
           IconButton(
             iconSize: 15,
-            icon: Icon(
-              Wideico.asset_2,
-              size: 13,
-            ),
+            icon: Icon(Wideico.asset_2),
             onPressed: () async =>
-                await platform_channel_draggable.invokeMethod("onClose"),
+                await platform_channel_draggable.invokeMethod("onMaximize"),
           ),
           IconButton(
-            iconSize: 13,
+            iconSize: 14,
             icon: Icon(Wideico.asset_1),
             onPressed: () async =>
                 await platform_channel_draggable.invokeMethod("onClose"),
@@ -133,7 +142,11 @@ class DraggableAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-        child: appBar, onPanStart: onPanStart, onPanUpdate: onPanUpdate);
+      child: appBar,
+      onPanStart: onPanStart,
+      onPanUpdate: onPanUpdate,
+      onDoubleTap: onDoubleTap,
+    );
   }
 
   @override
@@ -146,5 +159,9 @@ class DraggableAppBar extends StatelessWidget implements PreferredSizeWidget {
   void onPanStart(DragStartDetails details) async {
     await platform_channel_draggable.invokeMethod('onPanStart',
         {"dx": details.globalPosition.dx, "dy": details.globalPosition.dy});
+  }
+
+  void onDoubleTap() async {
+    await platform_channel_draggable.invokeMethod("onMaximize");
   }
 }
