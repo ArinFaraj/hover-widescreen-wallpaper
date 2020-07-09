@@ -24,6 +24,8 @@ func (p *AppBarDraggable) InitPlugin(messenger plugin.BinaryMessenger) error {
 	channel := plugin.NewMethodChannel(messenger, "samples.go-flutter.dev/draggable", plugin.StandardMethodCodec{})
 	channel.HandleFunc("onPanStart", p.onPanStart)
 	channel.HandleFuncSync("onPanUpdate", p.onPanUpdate) // MUST RUN ON THE MAIN THREAD (use of HandleFuncSync)
+	channel.HandleFunc("onResizeStart", p.onResizeStart)
+	channel.HandleFuncSync("onRsizeUpdate", p.onRsizeUpdate)
 	channel.HandleFunc("onClose", p.onClose)
 	channel.HandleFunc("onMaximize", p.onMaximize)
 	channel.HandleFunc("onMinimize", p.onMinimize)
@@ -75,6 +77,25 @@ func (p *AppBarDraggable) onPanUpdate(arguments interface{}) (reply interface{},
 	return nil, nil
 }
 
+func (p *AppBarDraggable) onResizeStart(arguments interface{}) (reply interface{}, err error) {
+	argumentsMap := arguments.(map[interface{}]interface{})
+	p.cursorPosX = int(argumentsMap["dx"].(float64))
+	p.cursorPosY = int(argumentsMap["dy"].(float64))
+
+	return nil, nil
+}
+
+func (p *AppBarDraggable) onRsizeUpdate(arguments interface{}) (reply interface{}, err error) {
+	xpos, ypos := p.window.GetCursorPos()
+	deltaX := int(xpos) - p.cursorPosX
+	deltaY := int(ypos) - p.cursorPosY
+	var x, y int
+	x, y = p.window.GetPos()
+	p.window.SetPos(x+deltaX, y+deltaY)
+
+	return nil, nil
+}
+
 func (p *AppBarDraggable) onClose(arguments interface{}) (reply interface{}, err error) {
 	// This function may be called from any thread. Access is not synchronized.
 	p.window.SetShouldClose(true)
@@ -86,7 +107,7 @@ func (p *AppBarDraggable) onMaximize(arguments interface{}) (reply interface{}, 
 	} else {
 		p.window.Maximize()
 	}
-	//TODO https://www.glfw.org/docs/latest/group__window.html
+	// https://www.glfw.org/docs/latest/group__window.html
 	return nil, nil
 }
 func (p *AppBarDraggable) onMinimize(arguments interface{}) (reply interface{}, err error) {

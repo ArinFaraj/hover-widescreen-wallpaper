@@ -1,19 +1,19 @@
-import 'package:flutter/foundation.dart'
-    show debugDefaultTargetPlatformOverride;
+/*import 'package:flutter/foundation.dart'
+    show debugDefaultTargetPlatformOverride;*/
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'wideico_icons.dart';
 import 'AppStateNotifier.dart';
 import 'dart:io';
+import 'draggable_plugin.dart';
 // void main() {
 //   debugDefaultTargetPlatformOverride = TargetPlatform.fuchsia;
 //   runApp(MyApp());
 // }
 
 void main() {
-  debugDefaultTargetPlatformOverride = TargetPlatform.fuchsia;
+  //debugDefaultTargetPlatformOverride = TargetPlatform.fuchsia;
   runApp(
     ChangeNotifierProvider<AppStateNotifier>(
       create: (context) => AppStateNotifier(),
@@ -60,6 +60,17 @@ class MyApp extends StatelessWidget {
                         Provider.of<AppStateNotifier>(context, listen: false)
                             .updateTheme(value),
                   ),
+                  DropdownButton<String>(
+                    items: <String>['One', 'Two', 'Free', 'Four']
+                        .map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                    value: 'One',
+                    onChanged: (String value) {},
+                  ),
                 ],
               ),
             ),
@@ -72,9 +83,6 @@ class MyApp extends StatelessWidget {
 
 // ignore: must_be_immutable
 class DraggableAppBar extends StatelessWidget implements PreferredSizeWidget {
-  static const platform_channel_draggable =
-      MethodChannel('samples.go-flutter.dev/draggable');
-
   Container appBar;
 
   DraggableAppBar({@required String title}) {
@@ -103,37 +111,6 @@ class DraggableAppBar extends StatelessWidget implements PreferredSizeWidget {
               ],
             ),
           ),
-          SizedBox(width: 20),
-          DropdownButton<String>(
-            items: <String>['One', 'Two', 'Free', 'Four']
-                .map<DropdownMenuItem<String>>((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              );
-            }).toList(),
-            value: 'One',
-            onChanged: (String value) {},
-          ),
-          Expanded(child: SizedBox(height: 45)),
-          IconButton(
-            iconSize: 16,
-            icon: Icon(Icons.minimize),
-            onPressed: () async =>
-                await platform_channel_draggable.invokeMethod("onMinimize"),
-          ),
-          IconButton(
-            iconSize: 15,
-            icon: Icon(Wideico.asset_2),
-            onPressed: () async =>
-                await platform_channel_draggable.invokeMethod("onMaximize"),
-          ),
-          IconButton(
-            iconSize: 14,
-            icon: Icon(Wideico.asset_1),
-            onPressed: () async =>
-                await platform_channel_draggable.invokeMethod("onClose"),
-          ),
         ],
       ),
     );
@@ -141,27 +118,52 @@ class DraggableAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      child: appBar,
-      onPanStart: onPanStart,
-      onPanUpdate: onPanUpdate,
-      onDoubleTap: onDoubleTap,
+    return Stack(
+      children: [
+        GestureDetector(
+          child: appBar,
+          onPanStart: DraggablePlugin.onPanStart,
+          onPanUpdate: DraggablePlugin.onPanUpdate,
+          onDoubleTap: () async => await DraggablePlugin.onMaximize(),
+        ),
+        Container(
+          child: Row(
+            children: [
+              SizedBox(width: 300),
+              DropdownButton<String>(
+                items: <String>['One', 'Two', 'Free', 'Four']
+                    .map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+                value: 'One',
+                onChanged: (String value) {},
+              ),
+              Expanded(child: SizedBox(height: 45)),
+              IconButton(
+                iconSize: 16,
+                icon: Icon(Icons.minimize),
+                onPressed: () async => await DraggablePlugin.onMinimize(),
+              ),
+              IconButton(
+                iconSize: 15,
+                icon: Icon(Wideico.asset_2),
+                onPressed: () async => await DraggablePlugin.onMaximize(),
+              ),
+              IconButton(
+                iconSize: 14,
+                icon: Icon(Wideico.asset_1),
+                onPressed: () async => await DraggablePlugin.onClose(),
+              ),
+            ],
+          ),
+        )
+      ],
     );
   }
 
   @override
   Size get preferredSize => new Size.fromHeight(45);
-
-  void onPanUpdate(DragUpdateDetails details) async {
-    await platform_channel_draggable.invokeMethod('onPanUpdate');
-  }
-
-  void onPanStart(DragStartDetails details) async {
-    await platform_channel_draggable.invokeMethod('onPanStart',
-        {"dx": details.globalPosition.dx, "dy": details.globalPosition.dy});
-  }
-
-  void onDoubleTap() async {
-    await platform_channel_draggable.invokeMethod("onMaximize");
-  }
 }
