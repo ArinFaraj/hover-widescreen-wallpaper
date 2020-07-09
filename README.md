@@ -14,7 +14,7 @@ A case study Flutter project made with go-flutter for desktop also can be built 
 - [x] Design the UI
 - [x] Borderless Draggable Window
 - [x] Maximize , Minimize , Restore
-- [ ] Resizable with borders
+- [x] Resizable
 - [ ] Theme Switching Using Bloc state managment
 - [ ] Finish the UI
 - [ ] Get Json from Reddit
