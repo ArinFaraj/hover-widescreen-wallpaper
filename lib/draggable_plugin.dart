@@ -29,6 +29,15 @@ class DraggablePlugin {
     await platform_channel_draggable.invokeMethod('onPanStart',
         {"dx": details.globalPosition.dx, "dy": details.globalPosition.dy});
   }
+
+  static void onResizeUpdate(DragUpdateDetails details) async {
+    await platform_channel_draggable.invokeMethod('onResizeUpdate');
+  }
+
+  static void onResizeStart(DragStartDetails details) async {
+    await platform_channel_draggable.invokeMethod('onResizeStart',
+        {"dx": details.globalPosition.dx, "dy": details.globalPosition.dy});
+  }
 /*
   static Future<bool> isFullScreen() async {
     return await channel.invokeMethod("getFullScreen");

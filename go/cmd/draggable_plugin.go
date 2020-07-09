@@ -13,6 +13,8 @@ type AppBarDraggable struct {
 	cursorPosX    int
 	fromMaximized bool
 	wBig          int
+	w             int
+	h             int
 }
 
 var _ flutter.Plugin = &AppBarDraggable{}     // compile-time type check
@@ -25,7 +27,7 @@ func (p *AppBarDraggable) InitPlugin(messenger plugin.BinaryMessenger) error {
 	channel.HandleFunc("onPanStart", p.onPanStart)
 	channel.HandleFuncSync("onPanUpdate", p.onPanUpdate) // MUST RUN ON THE MAIN THREAD (use of HandleFuncSync)
 	channel.HandleFunc("onResizeStart", p.onResizeStart)
-	channel.HandleFuncSync("onRsizeUpdate", p.onRsizeUpdate)
+	channel.HandleFuncSync("onResizeUpdate", p.onResizeUpdate)
 	channel.HandleFunc("onClose", p.onClose)
 	channel.HandleFunc("onMaximize", p.onMaximize)
 	channel.HandleFunc("onMinimize", p.onMinimize)
@@ -35,6 +37,7 @@ func (p *AppBarDraggable) InitPlugin(messenger plugin.BinaryMessenger) error {
 // InitPluginGLFW is used to gain control over the glfw.Window
 func (p *AppBarDraggable) InitPluginGLFW(window *glfw.Window) error {
 	p.window = window
+	p.window.SetSizeLimits(700, 400, 16000, 16000)
 	return nil
 }
 
@@ -81,17 +84,26 @@ func (p *AppBarDraggable) onResizeStart(arguments interface{}) (reply interface{
 	argumentsMap := arguments.(map[interface{}]interface{})
 	p.cursorPosX = int(argumentsMap["dx"].(float64))
 	p.cursorPosY = int(argumentsMap["dy"].(float64))
+	p.w, p.h = p.window.GetSize()
 
 	return nil, nil
 }
 
-func (p *AppBarDraggable) onRsizeUpdate(arguments interface{}) (reply interface{}, err error) {
+func (p *AppBarDraggable) onResizeUpdate(arguments interface{}) (reply interface{}, err error) {
 	xpos, ypos := p.window.GetCursorPos()
 	deltaX := int(xpos) - p.cursorPosX
 	deltaY := int(ypos) - p.cursorPosY
-	var x, y int
-	x, y = p.window.GetPos()
-	p.window.SetPos(x+deltaX, y+deltaY)
+	currentW, currentH := p.window.GetSize()
+	limW, limH := 700, 400
+	newW := p.w + deltaX
+	newH := p.h + deltaY
+	if newW >= limW {
+		currentW = newW
+		p.window.SetSize(newW, currentH)
+	}
+	if newH >= limH {
+		p.window.SetSize(currentW, newH)
+	}
 
 	return nil, nil
 }

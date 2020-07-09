@@ -27,6 +27,7 @@ dependencies:
   provider: ^4.2.0
   flutter_bloc: ^5.0.1
   equatable: ^1.2.0
+  universal_io: ^1.0.1
 
 
   # The following adds the Cupertino Icons font to your application.
