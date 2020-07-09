@@ -92,4 +92,4 @@ func (p *AppBarDraggable) onMaximize(arguments interface{}) (reply interface{}, 
 func (p *AppBarDraggable) onMinimize(arguments interface{}) (reply interface{}, err error) {
 	p.window.Iconify()
 	return nil, nil
-} 
+}
