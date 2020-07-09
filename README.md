@@ -1,6 +1,6 @@
 # Hover Widescreen Wallpaper
 <p align="center">
-A case study Flutter project made with go-flutter for desktop also can be build on mobile and web 
+A case study Flutter project made with go-flutter for desktop also can be built on mobile and web 
 </p>
 <p float="left" align="center">
   <img src="go/assets/icon.png" width="150" />
