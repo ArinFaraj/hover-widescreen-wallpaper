@@ -6,18 +6,21 @@ class Fullview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: FlatButton(
-        child: Stack(
-          children: [
-            Center(
-              child: CircularProgressIndicator(),
+    return FlatButton(
+      child: Stack(
+        children: [
+          Center(
+            child: CircularProgressIndicator(),
+          ),
+          Center(
+            child: Image.network(
+              url,
+              fit: BoxFit.cover,
             ),
-            Center(child: Image.network(url))
-          ],
-        ),
-        onPressed: () => Navigator.pop(context),
+          )
+        ],
       ),
+      onPressed: () => Navigator.pop(context),
     );
   }
 }

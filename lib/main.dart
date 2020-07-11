@@ -143,7 +143,7 @@ class _PostsListState extends State<PostsList> {
   void initState() {
     super.initState();
     _scrollCtrl.addListener(() async {
-      if (_scrollCtrl.position.pixels + 1000 >=
+      if (_scrollCtrl.position.pixels + 1500 >=
               _scrollCtrl.position.maxScrollExtent &&
           !loading) {
         setState(() {
@@ -163,8 +163,8 @@ class _PostsListState extends State<PostsList> {
     super.dispose();
   }
 
-  var width = 9;
-  var height = 21;
+  var width = 21;
+  var height = 9;
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -174,9 +174,9 @@ class _PostsListState extends State<PostsList> {
               physics: BouncingScrollPhysics(
                   parent: AlwaysScrollableScrollPhysics()),
               itemCount: currentPosts.length,
-              scrollDirection: Axis.horizontal,
+              scrollDirection: Axis.vertical,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 6, childAspectRatio: width / height),
+                  crossAxisCount: 5, childAspectRatio: width / height),
               controller: _scrollCtrl,
               itemBuilder: (context, index) {
                 return InkWell(
