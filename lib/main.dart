@@ -2,12 +2,16 @@
     show debugDefaultTargetPlatformOverride;*/
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hover_wide_wallpaper/res/strings.dart';
+import 'package:hover_wide_wallpaper/ui/fullview/fullview.dart';
 import 'package:provider/provider.dart';
-import 'wideico_icons.dart';
 import 'AppStateNotifier.dart';
 import 'draggable_plugin.dart';
 import 'package:universal_io/io.dart';
 import 'package:flutter/foundation.dart';
+import 'package:hover_wide_wallpaper/data/models/api_result_model.dart';
+import 'package:http/http.dart' as http;
+import 'package:draw/draw.dart';
 
 // void main() {
 //   debugDefaultTargetPlatformOverride = TargetPlatform.fuchsia;
@@ -15,7 +19,8 @@ import 'package:flutter/foundation.dart';
 // }
 bool isDesktop;
 bool isWeb;
-void main() {
+Reddit reddit;
+Future<void> main() async {
   //debugDefaultTargetPlatformOverride = TargetPlatform.fuchsia;
   if (kIsWeb) {
     isWeb = true;
@@ -23,6 +28,13 @@ void main() {
   } else {
     isDesktop = Platform.isWindows || Platform.isLinux || Platform.isMacOS;
   }
+  reddit = await Reddit.createReadOnlyInstance(
+    clientId: AppStrings.clientId,
+    clientSecret: AppStrings.clientSecret,
+    userAgent: AppStrings.userAgent,
+  );
+  print(reddit.auth.credentials);
+  //Redditor currentUser = null;
 
   runApp(
     ChangeNotifierProvider<AppStateNotifier>(
@@ -69,7 +81,11 @@ class HomeUI extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: DraggableAppBar(title: '/WIDESCREENWALLPAPER'),
+      appBar: DraggableAppBar(
+        title: 'R/WIDESCREENWALLPAPER',
+        isDesktop: isDesktop,
+        isWeb: isWeb,
+      ),
       body: Stack(
         children: [
           Center(
@@ -80,20 +96,18 @@ class HomeUI extends StatelessWidget {
                   Platform.operatingSystem,
                   style: TextStyle(fontSize: 18),
                 ),
-                DropdownButton<String>(
-                  items: <String>['One', 'Two', 'Free', 'Four']
-                      .map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                  value: 'One',
-                  onChanged: (String value) {},
+                FutureBuilder(
+                  future: fetchPosts(http.Client()),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return Expanded(child: PostsList());
+                    } else {
+                      return Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+                  },
                 ),
-                TextFormField(
-                  decoration: InputDecoration(labelText: 'Enter your username'),
-                )
               ],
             ),
           ),
@@ -115,103 +129,88 @@ class HomeUI extends StatelessWidget {
   }
 }
 
-// ignore: must_be_immutable
-class DraggableAppBar extends StatelessWidget implements PreferredSizeWidget {
-  Container appBar;
+class PostsList extends StatefulWidget {
+  const PostsList({Key key}) : super(key: key);
 
-  DraggableAppBar({@required String title}) {
-    this.appBar = Container(
-      color: Colors.transparent,
-      child: Row(
-        children: [
-          SizedBox(height: 45, width: 20),
-          RichText(
-            text: TextSpan(
-              text: 'R',
-              style: TextStyle(
-                  color: Color(0xFF00C2FF),
-                  fontSize: 23,
-                  fontWeight: FontWeight.w700,
-                  fontFamily: 'BlenderPro'),
-              children: <TextSpan>[
-                TextSpan(
-                  text: title,
-                  style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 23,
-                      fontWeight: FontWeight.w700,
-                      fontFamily: 'BlenderPro'),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+  @override
+  _PostsListState createState() => _PostsListState();
+}
+
+class _PostsListState extends State<PostsList> {
+  ScrollController _scrollCtrl = new ScrollController();
+  bool loading = false;
+  @override
+  void initState() {
+    super.initState();
+    _scrollCtrl.addListener(() async {
+      if (_scrollCtrl.position.pixels + 1000 >=
+              _scrollCtrl.position.maxScrollExtent &&
+          !loading) {
+        setState(() {
+          loading = true;
+        });
+        await fetchPosts(http.Client());
+        setState(() {
+          loading = false;
+        });
+      }
+    });
   }
 
+  @override
+  void dispose() {
+    _scrollCtrl.dispose();
+    super.dispose();
+  }
+
+  var width = 9;
+  var height = 21;
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-        child: Stack(
+    return Column(
       children: [
-        if (isDesktop)
-          GestureDetector(
-            child: appBar,
-            onPanStart: DraggablePlugin.onPanStart,
-            onPanUpdate: DraggablePlugin.onPanUpdate,
-            onDoubleTap: () async => await DraggablePlugin.onMaximize(),
-          )
-        else
-          appBar,
-        Container(
-            child: Row(children: [
-          SizedBox(width: 290),
-          DropdownButton<String>(
-            items: <String>['One', 'Two', 'Free', 'Four']
-                .map<DropdownMenuItem<String>>((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              );
-            }).toList(),
-            value: 'One',
-            onChanged: (String value) {},
-          ),
-          Switch(
-            value: Provider.of<AppStateNotifier>(context).isDarkMode,
-            onChanged: (value) =>
-                Provider.of<AppStateNotifier>(context, listen: false)
-                    .updateTheme(value),
-          ),
-        ])),
-        if (isDesktop)
-          Container(
-            child: Row(
-              children: [
-                Expanded(child: SizedBox(height: 45)),
-                IconButton(
-                  iconSize: 16,
-                  icon: Icon(Icons.minimize),
-                  onPressed: () async => await DraggablePlugin.onMinimize(),
-                ),
-                IconButton(
-                  iconSize: 15,
-                  icon: Icon(Wideico.asset_2),
-                  onPressed: () async => await DraggablePlugin.onMaximize(),
-                ),
-                IconButton(
-                  iconSize: 14,
-                  icon: Icon(Wideico.asset_1),
-                  onPressed: () async => await DraggablePlugin.onClose(),
-                ),
-              ],
-            ),
-          )
+        Expanded(
+          child: GridView.builder(
+              physics: BouncingScrollPhysics(
+                  parent: AlwaysScrollableScrollPhysics()),
+              itemCount: currentPosts.length,
+              scrollDirection: Axis.horizontal,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 6, childAspectRatio: width / height),
+              controller: _scrollCtrl,
+              itemBuilder: (context, index) {
+                return InkWell(
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                Fullview(url: currentPosts[index].url)));
+                  },
+                  child: Card(
+                      margin: EdgeInsets.all(5.0),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(10))),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        fit: StackFit.expand,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                            child: Image.network(
+                              currentPosts[index].thumbnail,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          Positioned(
+                              left: 10, top: 10, child: Text(index.toString())),
+                        ],
+                      )),
+                );
+              }),
+        ),
+        //if (loading) CircularProgressIndicator()
       ],
-    ));
+    );
   }
-
-  @override
-  Size get preferredSize => new Size.fromHeight(45);
 }
